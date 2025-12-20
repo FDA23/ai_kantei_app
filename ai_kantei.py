@@ -276,7 +276,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
         else:
             # ★ここからすごいボタンのコード
             # ★ここから鑑定ボタンの処理
-            if st.button("✨ Geminiで鑑定する", type="primary"):
+            if st.button("✨ 星に聞く", type="primary"):
                 
                 result_text = ""
                 success = False
@@ -356,5 +356,6 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     st.markdown("### 🔮 鑑定結果")
 
                     st.markdown(result_text)
+
 
 
