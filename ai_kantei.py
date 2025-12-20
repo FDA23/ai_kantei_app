@@ -24,7 +24,6 @@ genai.configure(api_key=my_api_key)
 
 # --- サイドバーでの入力処理 ---
 with st.sidebar:
-    st.header("1. 設定")
     
     # ★ここが改良版のキー読み込みロジックです
     api_key = None
@@ -354,4 +353,5 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                 # 成功したら結果を表示
                 if result_text:
                     st.markdown("### 🔮 鑑定結果")
+
                     st.markdown(result_text)
