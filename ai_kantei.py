@@ -161,6 +161,7 @@ with st.sidebar:
 
     st.markdown("---")
     st.header("2. 対象者データ")
+    name = st.sidebar.text_input("お名前", "ゲスト")
     input_date = st.date_input("生年月日", datetime.date(1974, 4, 23))
     input_time = st.time_input("出生時間", datetime.time(9, 22), step=60)
     st.header("3. 場所設定")
@@ -355,4 +356,5 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     st.markdown("### 🔮 鑑定結果")
 
                     st.markdown(result_text)
+
 
