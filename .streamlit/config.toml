@@ -1,0 +1,6 @@
+[theme]
+primaryColor = "#FF8C00"        # ボタンの色：鮮やかなサンセットオレンジ
+backgroundColor = "#00172B"     # 背景色：深い宇宙のブルー
+secondaryBackgroundColor = "#082948" # サイドバー：少し明るいネイビー
+textColor = "#FFF8E7"           # 文字色：星のようなクリームホワイト
+font = "serif"                  # フォント：明朝体
