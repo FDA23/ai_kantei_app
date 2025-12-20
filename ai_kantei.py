@@ -162,7 +162,7 @@ with st.sidebar:
     st.markdown("---")
     st.header("2. 対象者データ")
     input_date = st.date_input("生年月日", datetime.date(1974, 4, 23))
-    input_time = st.time_input("出生時間", datetime.time(9, 22))
+    input_time = st.time_input("出生時間", datetime.time(9, 22), step=60)
     st.header("3. 場所設定")
     input_lat = st.text_input("緯度", "36.6953")
     input_lon = st.text_input("経度", "137.2113")
@@ -355,3 +355,4 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     st.markdown("### 🔮 鑑定結果")
 
                     st.markdown(result_text)
+
