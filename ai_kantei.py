@@ -283,8 +283,10 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                 target_model = "gemini-2.0-flash-exp" 
 
                 # ★魔法の演出（グルグル）
-                with st.status("🌌 星々と交信中... (星の配置を読み解いています)", expanded=True) as status:
-                    
+             with st.spinner('💫 星々が言葉を紡いでいます...(Gemini 2.0起動中)'):
+                    try:
+                        # ここでさっき決めた「target_model」を使います！
+                        model = genai.GenerativeModel(target_model)
                     max_retries = 3
                     
                     for attempt in range(max_retries):
@@ -356,6 +358,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     st.markdown("### 🔮 鑑定結果")
 
                     st.markdown(result_text)
+
 
 
 
