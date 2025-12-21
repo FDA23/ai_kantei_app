@@ -283,7 +283,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                 # 変数の初期化
                 result_text = ""
                 success = False
-                target_model = "gemini-2.0-flash-exp"  # ★最新モデル指定
+                target_model = "gemini-2.5-flash"  # ★最新モデル指定
 
                 # ★魔法の演出（st.statusを使うと途中経過が見えて安心です）
                 with st.status("🌌 星々と交信中... (星の配置を読み解いています)", expanded=True) as status:
@@ -360,6 +360,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                 if result_text:
                     st.markdown("### 🔮 鑑定結果")
                     st.markdown(result_text)
+
 
 
 
