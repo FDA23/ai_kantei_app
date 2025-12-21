@@ -280,7 +280,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                 
                 result_text = ""
                 success = False
-                target_model = "gemini-1.5-flash" 
+                target_model = "gemini-1.5-flash-001" 
 
                 # ★魔法の演出（グルグル）
                 with st.status("🌌 星々と交信中... (星の配置を読み解いています)", expanded=True) as status:
@@ -356,6 +356,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     st.markdown("### 🔮 鑑定結果")
 
                     st.markdown(result_text)
+
 
 
 
