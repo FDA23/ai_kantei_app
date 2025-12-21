@@ -267,6 +267,9 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
         st.subheader("📄 計算結果")
         st.text_area("Result", st.session_state['result_txt'], height=450)
     
+# ------------------------------------------------------------------
+    # ▼ ここから右側エリア（AI鑑定）の完全版コード ▼
+    # ------------------------------------------------------------------
     with col2:
         st.subheader("🤖 AI自動鑑定")
         
@@ -274,24 +277,22 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
         if not api_key:
             st.info("👈 サイドバーでAPIキーを設定すると、鑑定ボタンが現れます。")
         else:
-            # ★ここからすごいボタンのコード
-            # ★ここから鑑定ボタンの処理
+            # ★鑑定ボタン
             if st.button("✨ 星に聞く✨", type="primary"):
                 
+                # 変数の初期化
                 result_text = ""
                 success = False
-                target_model = "gemini-2.0-flash-exp" 
+                target_model = "gemini-2.0-flash-exp"  # ★最新モデル指定
 
-                # ★魔法の演出（グルグル）
-                with st.spinner('💫 星々が言葉を紡いでいます...(Gemini 2.0起動中)'):
-                    try:
-                        # ここでさっき決めた「target_model」を使います！
-                        model = genai.GenerativeModel(target_model)
+                # ★魔法の演出（st.statusを使うと途中経過が見えて安心です）
+                with st.status("🌌 星々と交信中... (星の配置を読み解いています)", expanded=True) as status:
+                    
                     max_retries = 3
                     
                     for attempt in range(max_retries):
                         try:
-                            # 2回目以降は少し待つ
+                            # 2回目以降は少し待つ（API制限対策）
                             if attempt > 0:
                                 st.write(f"⏳ 混雑中... 星の導きを待っています ({attempt}/{max_retries})")
                                 time.sleep(5 * attempt)
@@ -299,7 +300,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                             st.write(f"📡 宇宙（Gemini 2.0）に接続中... (試行: {attempt + 1}回目)")
                             
                             # =========================================================
-                            # ★ここが新しいプロンプトです！
+                            # ★最強プロンプト（ここを変えるだけで占いの質が変わります）
                             # =========================================================
                             prompt = f"""
                             あなたは熟練した古典占星術師です。「生まれ持った資質・才能・運命」について深く鑑定してください。
@@ -319,21 +320,23 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
 
                             4. **ハウスの強弱・アスペクト**:
                                - データにある「アスペクト」や「ハウス配置」に基づいた根拠のあるアドバイスをしてください。
-                               特に「吉角（トライン・セクスタイル・合）」と「凶角（スクエア・オポジション）」のバランスを見て、注意点とチャンスの両方を伝えてください。
+                               - 特に「吉角（トライン・セクスタイル・合）」と「凶角（スクエア・オポジション）」のバランスを見て、注意点とチャンスの両方を伝えてください。
 
                             5. **まとめ**:
-                               - 最後に「全体的なアドバイス」をまとめてください。
+                               - 最後に「全体的なアドバイス」と「今すぐできるラッキーアクション」をまとめてください。
 
                             【計算データ】
                             {st.session_state['result_txt']}
                             """
                             # =========================================================
 
+                            # AIを呼び出す
                             model = genai.GenerativeModel(target_model)
                             response = model.generate_content(prompt)
                             
                             if response.text:
                                 result_text = response.text
+                                # 成功したらステータスを完了にしてループを抜ける
                                 status.update(label="✅ 鑑定完了！ 星からの手紙が届きました", state="complete", expanded=False)
                                 success = True
                                 break 
@@ -348,17 +351,15 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                                 st.error(f"詳細エラー: {error_msg}")
                                 break
                     
-                    # 3回やってもダメだった場合
+                    # 3回やってもダメだった場合のメッセージ
                     if not success and not result_text:
                         status.update(label="❌ 混雑のため中断", state="error")
                         st.error("星々の回線が混み合っています。少し時間を置いて再挑戦してください。")
 
-                # 成功したら結果を表示
+                # 結果表示
                 if result_text:
                     st.markdown("### 🔮 鑑定結果")
-
                     st.markdown(result_text)
-
 
 
 
