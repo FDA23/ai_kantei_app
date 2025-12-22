@@ -261,7 +261,7 @@ if calc_btn:
 if 'result_txt' in st.session_state and st.session_state['result_txt']:
     
     # 画面を左右に分割（左：計算結果、右：AI鑑定）
-    col1, col2 = st.columns([1.2, 1])
+    col1, col2 = st.columns([1, 1.2])
     
     with col1:
         st.subheader("📄 計算結果")
@@ -360,6 +360,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                 if result_text:
                     st.markdown("### 🔮 鑑定結果")
                     st.markdown(result_text)
+
 
 
 
