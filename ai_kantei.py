@@ -303,7 +303,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                             # ★最強プロンプト（ここを変えるだけで占いの質が変わります）
                             # =========================================================
                             prompt = f"""
-                            あなたは熟練した古典占星術師です。「生まれ持った資質・才能・運命」について深く鑑定してください。
+                            あなたは厳しくも愛のある古典占星術師です。専門用語も交えて「生まれ持った資質・才能・運命」について深く鑑定してください。
                             以下の計算データを元に、マークダウン形式で見やすく出力してください。
 
                             【鑑定のポイント】
@@ -360,6 +360,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                 if result_text:
                     st.markdown("### 🔮 鑑定結果")
                     st.markdown(result_text)
+
 
 
 
