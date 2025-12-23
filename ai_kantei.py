@@ -47,14 +47,14 @@ JP_NAMES = {
     'Mars': '火星', 'Jupiter': '木星', 'Saturn': '土星', 
     'Uranus': '天王星', 'Neptune': '海王星', 'Pluto': '冥王星',
     'North Node': 'ノースノード', 'South Node': 'サウスノード',
-    'Part of Fortune': 'パート・オブ・フォーチュン(POF)', # ★追加
+    'Part of Fortune': 'パート・オブ・フォーチュン(POF)', 
     'Aries': '牡羊座', 'Taurus': '牡牛座', 'Gemini': '双子座',
     'Cancer': '蟹座', 'Leo': '獅子座', 'Virgo': '乙女座',
     'Libra': '天秤座', 'Scorpio': '蠍座', 'Sagittarius': '射手座',
     'Capricorn': '山羊座', 'Aquarius': '水瓶座', 'Pisces': '魚座'
 }
 
-# サインのリスト（POF計算用）
+# サインのリスト（ハウス計算用）
 SIGN_LIST = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces']
 
 RULERS = {'Aries': 'Mars', 'Taurus': 'Venus', 'Gemini': 'Mercury', 'Cancer': 'Moon', 'Leo': 'Sun', 'Virgo': 'Mercury', 'Libra': 'Venus', 'Scorpio': 'Mars', 'Sagittarius': 'Jupiter', 'Capricorn': 'Saturn', 'Aquarius': 'Saturn', 'Pisces': 'Jupiter'}
@@ -161,44 +161,39 @@ if calc_btn:
         all_p = [const.SUN, const.MOON, const.MERCURY, const.VENUS, const.MARS, const.JUPITER, const.SATURN, const.URANUS, const.NEPTUNE, const.PLUTO, const.NORTH_NODE]
         trad_p = [const.SUN, const.MOON, const.MERCURY, const.VENUS, const.MARS, const.JUPITER, const.SATURN]
 
-        # ★ 修正: 常にホールサイン(Whole Sign)で計算
+        # ★ 常にホールサイン(Whole Sign)で計算
         chart_whole = Chart(date, pos, hsys=const.HOUSES_WHOLE_SIGN, IDs=all_p)
 
-        # --- 昼夜（Sect）の判定 (ホールサイン基準) ---
-        # 太陽が地平線(Asc-Dsc軸)より上にあるか下にあるか
-        # 太陽のハウス(1-6:夜 / 7-12:昼)で判定するが、FlatlibのHouseオブジェクトから取得
-        sun_obj = chart_whole.get(const.SUN)
-        # FlatlibのHouseオブジェクトは通常 Placidus等がデフォルトになりがちなので
-        # ホールサインでのハウス番号を手動で確実に計算する
+        # ★ アセンダント(ASC)とMCを先に取得（ハウス計算の基準になるため）
         asc_obj = chart_whole.get(const.ASC)
-        asc_sign_idx = SIGN_LIST.index(asc_obj.sign) # 牡羊座=0 ...
+        mc_obj = chart_whole.get(const.MC)
+        asc_sign_idx = SIGN_LIST.index(asc_obj.sign) # ASCが何番目のサインか(0-11)
+
+        # --- 昼夜（Sect）の判定 ---
+        sun_obj = chart_whole.get(const.SUN)
         sun_sign_idx = SIGN_LIST.index(sun_obj.sign)
         
         # 太陽のハウス = (太陽サイン - Ascサイン) + 1
         sun_house_num = (sun_sign_idx - asc_sign_idx) + 1
         if sun_house_num <= 0: sun_house_num += 12
         
-        is_day = (7 <= sun_house_num <= 12) # 7〜12ハウスなら昼
+        is_day = (7 <= sun_house_num <= 12)
         sect_str = "昼チャート (Day)" if is_day else "夜チャート (Night)"
 
-        # --- ★ POF (Part of Fortune) の計算 ---
-        asc_lon = asc_obj.lon # 絶対経度(0-360)
+        # --- POF (Part of Fortune) の計算 ---
+        asc_lon = asc_obj.lon
         sun_lon = sun_obj.lon
         moon_lon = chart_whole.get(const.MOON).lon
         
         if is_day:
-            # 昼: ASC + 月 - 太陽
             pof_lon = (asc_lon + moon_lon - sun_lon) % 360
         else:
-            # 夜: ASC + 太陽 - 月
             pof_lon = (asc_lon + sun_lon - moon_lon) % 360
             
-        # POFのサインと度数を算出
         pof_sign_idx = int(pof_lon // 30)
         pof_deg = pof_lon % 30
         pof_sign = SIGN_LIST[pof_sign_idx]
         
-        # POFのハウス (ホールサイン)
         pof_house_num = (pof_sign_idx - asc_sign_idx) + 1
         if pof_house_num <= 0: pof_house_num += 12
 
@@ -217,13 +212,23 @@ if calc_btn:
             obj = chart_whole.get(p_id)
             d, m = int(obj.signlon), int((obj.signlon - int(obj.signlon)) * 60)
             retro = " (R)" if obj.isRetrograde() else ""
-            log(f"{JP_NAMES.get(p_id):<6}: {JP_NAMES.get(obj.sign)} {d:02}度{m:02}分{retro} 【360度:{format_360(obj.sign, d, m)}】")
+            
+            # ★ 天体のハウス番号を計算
+            obj_sign_idx = SIGN_LIST.index(obj.sign)
+            house_num = (obj_sign_idx - asc_sign_idx) + 1
+            if house_num <= 0: house_num += 12
+            
+            # ハウス情報を追加して表示
+            log(f"{JP_NAMES.get(p_id):<6}: {JP_NAMES.get(obj.sign)} {d:02}度{m:02}分{retro} (第{house_num}ハウス) 【360度:{format_360(obj.sign, d, m)}】")
         
-        asc, mc = chart_whole.get(const.ASC), chart_whole.get(const.MC)
-        log(f"{'ASC':<6}: {JP_NAMES.get(asc.sign)} {int(asc.signlon):02}度 【360度:{format_360(asc.sign, int(asc.signlon), 0)}】")
-        log(f"{'MC':<6}: {JP_NAMES.get(mc.sign)} {int(mc.signlon):02}度 【360度:{format_360(mc.sign, int(mc.signlon), 0)}】")
+        log(f"{'ASC':<6}: {JP_NAMES.get(asc_obj.sign)} {int(asc_obj.signlon):02}度 (第1ハウス) 【360度:{format_360(asc_obj.sign, int(asc_obj.signlon), 0)}】")
         
-        # ★ POF出力
+        # MCのハウスも計算
+        mc_sign_idx = SIGN_LIST.index(mc_obj.sign)
+        mc_house_num = (mc_sign_idx - asc_sign_idx) + 1
+        if mc_house_num <= 0: mc_house_num += 12
+        log(f"{'MC':<6}: {JP_NAMES.get(mc_obj.sign)} {int(mc_obj.signlon):02}度 (第{mc_house_num}ハウス) 【360度:{format_360(mc_obj.sign, int(mc_obj.signlon), 0)}】")
+        
         log(f"{'POF':<6}: {JP_NAMES.get(pof_sign)} {int(pof_deg):02}度 (第{pof_house_num}ハウス)")
         log("-" * 60)
 
@@ -242,7 +247,6 @@ if calc_btn:
 
         log("\n【データ3: ハウス・ストレングス (Whole Sign)】")
         for i in range(1, 13):
-            # ホールサインのハウスオブジェクトを取得
             h_obj = chart_whole.get(f'House{i}')
             ruler_en = RULERS.get(h_obj.sign)
             ruler_score = planet_score_map.get(ruler_en, 0)
@@ -260,7 +264,7 @@ if calc_btn:
                     log(f"{JP_NAMES.get(id1,id1)} x {JP_NAMES.get(id2,id2)} : {asp_names.get(asp.type)} (誤差{asp.orb:.1f})")
 
         st.session_state['result_txt'] = "\n".join(lines)
-        st.success("計算完了 (ホールサイン・POF対応)")
+        st.success("計算完了 (ホールサイン・POF・ハウス情報対応)")
     except Exception as e: st.error(f"エラー: {e}")
 
 # ==========================================
