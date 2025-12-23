@@ -138,7 +138,6 @@ with col_title: st.title("AI古典占星術 鑑定システム")
 with st.sidebar:
     st.markdown("---")
     st.header("2. 対象者データ")
-    # ★ ここに名前入力を復活させました！
     name = st.text_input("お名前", "ゲスト") 
     input_date = st.date_input("生年月日", datetime.date(1974, 4, 23))
     input_time = st.time_input("出生時間", datetime.time(9, 22), step=60)
@@ -193,7 +192,6 @@ if calc_btn:
         def log(t): lines.append(t)
 
         log(f"【AI鑑定用 詳細データ】")
-        # ★ 計算データにも名前を追加して、AIが名前を使えるようにしました
         log(f"お名前: {name}") 
         log(f"生年月日: {date_str} {time_str}\nチャート区分: {sect_str}")
         log("-" * 60)
@@ -209,18 +207,22 @@ if calc_btn:
             house_num = (obj_sign_idx - asc_sign_idx) + 1
             if house_num <= 0: house_num += 12
             
-            # セクト情報追加
+            # セクト情報
             sect_status = get_planet_sect_status(p_id, is_day)
             sect_info = f" / {sect_status}" if sect_status else ""
             
-            log(f"{JP_NAMES.get(p_id):<6}: {JP_NAMES.get(obj.sign)} {d:02}度{m:02}分{retro} (第{house_num}ハウス){sect_info}")
+            # ★ 360度表記を復活させ、セクトの横に追加しました
+            abs_deg = format_360(obj.sign, d, m)
+            
+            log(f"{JP_NAMES.get(p_id):<6}: {JP_NAMES.get(obj.sign)} {d:02}度{m:02}分{retro} (第{house_num}ハウス){sect_info} 【360度:{abs_deg}】")
         
-        log(f"{'ASC':<6}: {JP_NAMES.get(asc_obj.sign)} {int(asc_obj.signlon):02}度 (第1ハウス)")
+        # ASC, MC, POFにも360度表記を一応つけておきます（念のため）
+        log(f"{'ASC':<6}: {JP_NAMES.get(asc_obj.sign)} {int(asc_obj.signlon):02}度 (第1ハウス) 【360度:{format_360(asc_obj.sign, int(asc_obj.signlon), 0)}】")
         
         mc_sign_idx = SIGN_LIST.index(mc_obj.sign)
         mc_house_num = (mc_sign_idx - asc_sign_idx) + 1
         if mc_house_num <= 0: mc_house_num += 12
-        log(f"{'MC':<6}: {JP_NAMES.get(mc_obj.sign)} {int(mc_obj.signlon):02}度 (第{mc_house_num}ハウス)")
+        log(f"{'MC':<6}: {JP_NAMES.get(mc_obj.sign)} {int(mc_obj.signlon):02}度 (第{mc_house_num}ハウス) 【360度:{format_360(mc_obj.sign, int(mc_obj.signlon), 0)}】")
         
         log(f"{'POF':<6}: {JP_NAMES.get(pof_sign)} {int(pof_deg):02}度 (第{pof_house_num}ハウス)")
         log("-" * 60)
@@ -257,7 +259,7 @@ if calc_btn:
                     log(f"{JP_NAMES.get(id1,id1)} x {JP_NAMES.get(id2,id2)} : {asp_names.get(asp.type)} (誤差{asp.orb:.1f})")
 
         st.session_state['result_txt'] = "\n".join(lines)
-        st.success("計算完了 (ホールサイン・POF・セクト判定済)")
+        st.success("計算完了 (ホールサイン・POF・セクト判定・360度表記済)")
     except Exception as e: st.error(f"エラー: {e}")
 
 # ==========================================
@@ -280,8 +282,6 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                 success = False
                 target_model = "gemini-2.5-flash"
                 
-                # ★ ここがグルグル演出の変更箇所です！
-                # ステータスバーを表示し、鑑定中は「💫」アイコンが回ります
                 with st.status("💫 星々が運命を巡っています... (星の配置を読み解いています)", expanded=True) as status:
                     max_retries = 3
                     for attempt in range(max_retries):
@@ -323,7 +323,6 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                             response = model.generate_content(prompt)
                             if response.text:
                                 result_text = response.text
-                                # ★ 完了メッセージを変更しました
                                 status.update(label="✅ 鑑定完了。星からのお手紙が届きました。", state="complete", expanded=False)
                                 success = True
                                 break 
