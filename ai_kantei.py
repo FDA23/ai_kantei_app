@@ -138,6 +138,8 @@ with col_title: st.title("AI古典占星術 鑑定システム")
 with st.sidebar:
     st.markdown("---")
     st.header("2. 対象者データ")
+    # ★ ここに名前入力を復活させました！
+    name = st.text_input("お名前", "ゲスト") 
     input_date = st.date_input("生年月日", datetime.date(1974, 4, 23))
     input_time = st.time_input("出生時間", datetime.time(9, 22), step=60)
     st.header("3. 場所設定")
@@ -191,6 +193,8 @@ if calc_btn:
         def log(t): lines.append(t)
 
         log(f"【AI鑑定用 詳細データ】")
+        # ★ 計算データにも名前を追加して、AIが名前を使えるようにしました
+        log(f"お名前: {name}") 
         log(f"生年月日: {date_str} {time_str}\nチャート区分: {sect_str}")
         log("-" * 60)
         
@@ -275,16 +279,16 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                 result_text = ""
                 success = False
                 target_model = "gemini-2.5-flash"
-                with st.status("🌌 星々と交信中...", expanded=True) as status:
+                
+                # ★ ここがグルグル演出の変更箇所です！
+                # ステータスバーを表示し、鑑定中は「💫」アイコンが回ります
+                with st.status("💫 星々が運命を巡っています... (星の配置を読み解いています)", expanded=True) as status:
                     max_retries = 3
                     for attempt in range(max_retries):
                         try:
                             if attempt > 0: time.sleep(5 * attempt)
                             st.write(f"📡 宇宙（Gemini 2.0）に接続中... (試行: {attempt + 1}回目)")
                             
-                            # =========================================================
-                            # ★ プロンプト（Akikoさん指定版）
-                            # =========================================================
                             prompt = f"""
                             あなたは「甘さを一切排除した厳格な古典占星術師」です。
                             相談者を慰めるのではなく、冷徹なまでに客観的な「運命の事実」のみを告げてください。
@@ -314,13 +318,13 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                             【計算データ】
                             {st.session_state['result_txt']}
                             """
-                            # =========================================================
                             
                             model = genai.GenerativeModel(target_model)
                             response = model.generate_content(prompt)
                             if response.text:
                                 result_text = response.text
-                                status.update(label="✅ 鑑定完了！", state="complete", expanded=False)
+                                # ★ 完了メッセージを変更しました
+                                status.update(label="✅ 鑑定完了。星からのお手紙が届きました。", state="complete", expanded=False)
                                 success = True
                                 break 
                         except Exception as e:
