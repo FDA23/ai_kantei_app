@@ -290,7 +290,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                             st.write(f"📡 宇宙（Gemini 2.0）に接続中... (試行: {attempt + 1}回目)")
                             
                             prompt = f"""
-                            あなたは「甘さを一切排除した厳格な古典占星術師」です。
+                            あなたは「厳格な古典占星術師」です。
                             相談者を慰めるのではなく、冷徹なまでに客観的な「運命の事実」のみを告げてください。
                             専門用語（セクト、エグザルテーション、ペレグリン等）を駆使し、吉凶をはっきりと断じてください。
 
@@ -336,5 +336,6 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                 if result_text:
                     st.markdown("### 🔮 鑑定結果")
                     st.markdown(result_text)
+
 
 
