@@ -1,7 +1,7 @@
 import streamlit as st
 import google.generativeai as genai
 import datetime
-import time  # リトライ機能用
+import time
 from flatlib.datetime import Datetime
 from flatlib.geopos import GeoPos
 from flatlib.chart import Chart
@@ -9,30 +9,21 @@ from flatlib import const
 from flatlib import aspects
 
 # ==========================================
-# 1. アプリ設定 & 定義データ
+# 1. アプリ設定
 # ==========================================
 st.set_page_config(page_title="AI古典占星術鑑定", layout="wide", page_icon="my_icon.png")
 
-# --- サイドバーでの入力処理 ---
+# --- サイドバーAPI設定 ---
 with st.sidebar:
     st.header("1. 設定")
     api_key = None
-    
-    # 1. まずStreamlitの金庫（Secrets）を探す
     try:
         if "GEMINI_API_KEY" in st.secrets:
             api_key = st.secrets["GEMINI_API_KEY"]
             st.success("🔑 APIキーを読み込み済み")
-    except:
-        pass # 金庫がなくても気にしない
-
-    # 2. 金庫になければ、手入力欄を出す
+    except: pass
     if not api_key:
         api_key = st.text_input("Gemini APIキー", type="password")
-        if not api_key:
-            st.warning("⚠️ キーを入力してください")
-
-    # 3. キー設定
     if api_key:
         try:
             genai.configure(api_key=api_key)
@@ -40,7 +31,7 @@ with st.sidebar:
             st.error(f"キー設定エラー: {e}")
 
 # ==========================================
-# 2. 定義データ (古典占星術)
+# 2. 定義データ
 # ==========================================
 JP_NAMES = {
     'Sun': '太陽', 'Moon': '月', 'Mercury': '水星', 'Venus': '金星', 
@@ -53,8 +44,6 @@ JP_NAMES = {
     'Libra': '天秤座', 'Scorpio': '蠍座', 'Sagittarius': '射手座',
     'Capricorn': '山羊座', 'Aquarius': '水瓶座', 'Pisces': '魚座'
 }
-
-# サインのリスト（ハウス計算用）
 SIGN_LIST = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces']
 
 RULERS = {'Aries': 'Mars', 'Taurus': 'Venus', 'Gemini': 'Mercury', 'Cancer': 'Moon', 'Leo': 'Sun', 'Virgo': 'Mercury', 'Libra': 'Venus', 'Scorpio': 'Mars', 'Sagittarius': 'Jupiter', 'Capricorn': 'Saturn', 'Aquarius': 'Saturn', 'Pisces': 'Jupiter'}
@@ -76,10 +65,9 @@ EGYPTIAN_TERMS = {
     'Aquarius': [(7, 'Mercury'), (13, 'Venus'), (20, 'Jupiter'), (25, 'Mars'), (30, 'Saturn')],
     'Pisces': [(12, 'Venus'), (16, 'Jupiter'), (19, 'Mercury'), (28, 'Mars'), (30, 'Saturn')]
 }
-
+FACES = {'Aries': ['Mars', 'Sun', 'Venus'], 'Taurus': ['Mercury', 'Moon', 'Saturn'], 'Gemini': ['Jupiter', 'Mars', 'Sun'], 'Cancer': ['Venus', 'Mercury', 'Moon'], 'Leo': ['Saturn', 'Jupiter', 'Mars'], 'Virgo': ['Sun', 'Venus', 'Mercury'], 'Libra': ['Moon', 'Saturn', 'Jupiter'], 'Scorpio': ['Mars', 'Sun', 'Venus'], 'Sagittarius': ['Mercury', 'Moon', 'Saturn'], 'Capricorn': ['Jupiter', 'Mars', 'Sun'], 'Aquarius': ['Venus', 'Mercury', 'Moon'], 'Pisces': ['Saturn', 'Jupiter', 'Mars']}
 SIGN_ELEMENTS = {'Aries': 'Fire', 'Leo': 'Fire', 'Sagittarius': 'Fire', 'Taurus': 'Earth', 'Virgo': 'Earth', 'Capricorn': 'Earth', 'Gemini': 'Air', 'Libra': 'Air', 'Aquarius': 'Air', 'Cancer': 'Water', 'Scorpio': 'Water', 'Pisces': 'Water'}
 DOROTHEUS_TRIPLICITY = {'Fire': {'Day': ['Sun', 'Jupiter', 'Saturn'], 'Night': ['Jupiter', 'Sun', 'Saturn']}, 'Earth': {'Day': ['Venus', 'Moon', 'Mars'], 'Night': ['Moon', 'Venus', 'Mars']}, 'Air': {'Day': ['Saturn', 'Mercury', 'Jupiter'], 'Night': ['Mercury', 'Saturn', 'Jupiter']}, 'Water': {'Day': ['Venus', 'Mars', 'Moon'], 'Night': ['Mars', 'Venus', 'Moon']}}
-FACES = {'Aries': ['Mars', 'Sun', 'Venus'], 'Taurus': ['Mercury', 'Moon', 'Saturn'], 'Gemini': ['Jupiter', 'Mars', 'Sun'], 'Cancer': ['Venus', 'Mercury', 'Moon'], 'Leo': ['Saturn', 'Jupiter', 'Mars'], 'Virgo': ['Sun', 'Venus', 'Mercury'], 'Libra': ['Moon', 'Saturn', 'Jupiter'], 'Scorpio': ['Mars', 'Sun', 'Venus'], 'Sagittarius': ['Mercury', 'Moon', 'Saturn'], 'Capricorn': ['Jupiter', 'Mars', 'Sun'], 'Aquarius': ['Venus', 'Mercury', 'Moon'], 'Pisces': ['Saturn', 'Jupiter', 'Mars']}
 HOUSE_THEMES = ["本人・生命力", "金運・所有", "兄弟・通信", "家庭・晩年", "創造・恋愛・子供", "健康・労働", "結婚・対人", "遺産・死", "哲学・旅行", "天職・社会", "友人・希望", "秘密・障害"]
 SIGN_OFFSETS = {'Aries': 0, 'Taurus': 30, 'Gemini': 60, 'Cancer': 90, 'Leo': 120, 'Virgo': 150, 'Libra': 180, 'Scorpio': 210, 'Sagittarius': 240, 'Capricorn': 270, 'Aquarius': 300, 'Pisces': 330}
 
@@ -106,6 +94,7 @@ def get_dorotheus_trip(sign, is_day):
 def calculate_dignity_score(planet, sign, degree, is_day):
     score = 0
     details = []
+    # 品位計算
     if RULERS.get(sign) == planet: score += 5; details.append("Ruler(+5)")
     if EXALTATIONS.get(sign) == planet: score += 4; details.append("Exalt(+4)")
     trip_rulers = get_dorotheus_trip(sign, is_day)
@@ -116,27 +105,39 @@ def calculate_dignity_score(planet, sign, degree, is_day):
     if FALLS.get(sign) == planet: score -= 4; details.append("Fall(-4)")
     has_dignity = any(x in ["Ruler(+5)", "Exalt(+4)", "Trip(+3)", "Term(+2)", "Face(+1)"] for x in details)
     if not has_dignity: score -= 5; details.append("Peregrine(-5)")
+    
     return score, ", ".join(details)
 
 def format_360(sign_en, d, m):
     base = SIGN_OFFSETS.get(sign_en, 0)
     return f"{base + d}度{m:02}分"
 
+# ★ セクト判定関数
+def get_planet_sect_status(planet_id, is_day_chart):
+    diurnal_team = ['Sun', 'Jupiter', 'Saturn']
+    nocturnal_team = ['Moon', 'Venus', 'Mars']
+    
+    status = ""
+    if is_day_chart:
+        if planet_id in diurnal_team: status = "In Sect(吉)"
+        elif planet_id in nocturnal_team: status = "Out of Sect(凶)"
+        else: status = "Neutral"
+    else:
+        if planet_id in nocturnal_team: status = "In Sect(吉)"
+        elif planet_id in diurnal_team: status = "Out of Sect(凶)"
+        else: status = "Neutral"
+    return status
+
 # ==========================================
-# 4. メイン画面レイアウト
+# 4. メイン画面
 # ==========================================
 col_icon, col_title = st.columns([2, 10])
-
-with col_icon:
-    st.image("my_icon.png", width=100)
-
-with col_title:
-    st.title("AI古典占星術 鑑定システム")
+with col_icon: st.image("my_icon.png", width=100)
+with col_title: st.title("AI古典占星術 鑑定システム")
 
 with st.sidebar:
     st.markdown("---")
     st.header("2. 対象者データ")
-    name = st.sidebar.text_input("お名前", "ゲスト")
     input_date = st.date_input("生年月日", datetime.date(1974, 4, 23))
     input_time = st.time_input("出生時間", datetime.time(9, 22), step=60)
     st.header("3. 場所設定")
@@ -149,7 +150,7 @@ if 'result_txt' not in st.session_state:
     st.session_state['result_txt'] = ""
 
 # ==========================================
-# 5. 計算ロジック（ホールサイン・POF対応）
+# 5. 計算実行
 # ==========================================
 if calc_btn:
     try:
@@ -161,45 +162,31 @@ if calc_btn:
         all_p = [const.SUN, const.MOON, const.MERCURY, const.VENUS, const.MARS, const.JUPITER, const.SATURN, const.URANUS, const.NEPTUNE, const.PLUTO, const.NORTH_NODE]
         trad_p = [const.SUN, const.MOON, const.MERCURY, const.VENUS, const.MARS, const.JUPITER, const.SATURN]
 
-        # ★ 常にホールサイン(Whole Sign)で計算
+        # ホールサイン計算
         chart_whole = Chart(date, pos, hsys=const.HOUSES_WHOLE_SIGN, IDs=all_p)
-
-        # ★ アセンダント(ASC)とMCを先に取得（ハウス計算の基準になるため）
         asc_obj = chart_whole.get(const.ASC)
         mc_obj = chart_whole.get(const.MC)
-        asc_sign_idx = SIGN_LIST.index(asc_obj.sign) # ASCが何番目のサインか(0-11)
+        asc_sign_idx = SIGN_LIST.index(asc_obj.sign)
 
-        # --- 昼夜（Sect）の判定 ---
+        # 昼夜判定
         sun_obj = chart_whole.get(const.SUN)
         sun_sign_idx = SIGN_LIST.index(sun_obj.sign)
-        
-        # 太陽のハウス = (太陽サイン - Ascサイン) + 1
         sun_house_num = (sun_sign_idx - asc_sign_idx) + 1
         if sun_house_num <= 0: sun_house_num += 12
-        
         is_day = (7 <= sun_house_num <= 12)
         sect_str = "昼チャート (Day)" if is_day else "夜チャート (Night)"
 
-        # --- POF (Part of Fortune) の計算 ---
-        asc_lon = asc_obj.lon
-        sun_lon = sun_obj.lon
-        moon_lon = chart_whole.get(const.MOON).lon
-        
-        if is_day:
-            pof_lon = (asc_lon + moon_lon - sun_lon) % 360
-        else:
-            pof_lon = (asc_lon + sun_lon - moon_lon) % 360
-            
+        # POF計算
+        asc_lon, sun_lon, moon_lon = asc_obj.lon, sun_obj.lon, chart_whole.get(const.MOON).lon
+        if is_day: pof_lon = (asc_lon + moon_lon - sun_lon) % 360
+        else: pof_lon = (asc_lon + sun_lon - moon_lon) % 360
         pof_sign_idx = int(pof_lon // 30)
         pof_deg = pof_lon % 30
         pof_sign = SIGN_LIST[pof_sign_idx]
-        
         pof_house_num = (pof_sign_idx - asc_sign_idx) + 1
         if pof_house_num <= 0: pof_house_num += 12
 
-        # ----------------------------------------
-        # 結果テキスト作成
-        # ----------------------------------------
+        # 結果作成
         lines = []
         def log(t): lines.append(t)
 
@@ -213,21 +200,23 @@ if calc_btn:
             d, m = int(obj.signlon), int((obj.signlon - int(obj.signlon)) * 60)
             retro = " (R)" if obj.isRetrograde() else ""
             
-            # ★ 天体のハウス番号を計算
+            # ハウス計算
             obj_sign_idx = SIGN_LIST.index(obj.sign)
             house_num = (obj_sign_idx - asc_sign_idx) + 1
             if house_num <= 0: house_num += 12
             
-            # ハウス情報を追加して表示
-            log(f"{JP_NAMES.get(p_id):<6}: {JP_NAMES.get(obj.sign)} {d:02}度{m:02}分{retro} (第{house_num}ハウス) 【360度:{format_360(obj.sign, d, m)}】")
+            # セクト情報追加
+            sect_status = get_planet_sect_status(p_id, is_day)
+            sect_info = f" / {sect_status}" if sect_status else ""
+            
+            log(f"{JP_NAMES.get(p_id):<6}: {JP_NAMES.get(obj.sign)} {d:02}度{m:02}分{retro} (第{house_num}ハウス){sect_info}")
         
-        log(f"{'ASC':<6}: {JP_NAMES.get(asc_obj.sign)} {int(asc_obj.signlon):02}度 (第1ハウス) 【360度:{format_360(asc_obj.sign, int(asc_obj.signlon), 0)}】")
+        log(f"{'ASC':<6}: {JP_NAMES.get(asc_obj.sign)} {int(asc_obj.signlon):02}度 (第1ハウス)")
         
-        # MCのハウスも計算
         mc_sign_idx = SIGN_LIST.index(mc_obj.sign)
         mc_house_num = (mc_sign_idx - asc_sign_idx) + 1
         if mc_house_num <= 0: mc_house_num += 12
-        log(f"{'MC':<6}: {JP_NAMES.get(mc_obj.sign)} {int(mc_obj.signlon):02}度 (第{mc_house_num}ハウス) 【360度:{format_360(mc_obj.sign, int(mc_obj.signlon), 0)}】")
+        log(f"{'MC':<6}: {JP_NAMES.get(mc_obj.sign)} {int(mc_obj.signlon):02}度 (第{mc_house_num}ハウス)")
         
         log(f"{'POF':<6}: {JP_NAMES.get(pof_sign)} {int(pof_deg):02}度 (第{pof_house_num}ハウス)")
         log("-" * 60)
@@ -264,7 +253,7 @@ if calc_btn:
                     log(f"{JP_NAMES.get(id1,id1)} x {JP_NAMES.get(id2,id2)} : {asp_names.get(asp.type)} (誤差{asp.orb:.1f})")
 
         st.session_state['result_txt'] = "\n".join(lines)
-        st.success("計算完了 (ホールサイン・POF・ハウス情報対応)")
+        st.success("計算完了 (ホールサイン・POF・セクト判定済)")
     except Exception as e: st.error(f"エラー: {e}")
 
 # ==========================================
@@ -273,36 +262,28 @@ if calc_btn:
 if 'result_txt' in st.session_state and st.session_state['result_txt']:
     
     col1, col2 = st.columns([1, 1.2])
-    
     with col1:
         st.subheader("📄 計算結果")
         st.text_area("Result", st.session_state['result_txt'], height=450)
     
     with col2:
         st.subheader("🤖 AI自動鑑定")
-        
         if not api_key:
             st.info("👈 サイドバーでAPIキーを設定すると、鑑定ボタンが現れます。")
         else:
             if st.button("✨ 星に聞く✨", type="primary"):
-                
                 result_text = ""
                 success = False
                 target_model = "gemini-2.5-flash"
-
                 with st.status("🌌 星々と交信中...", expanded=True) as status:
                     max_retries = 3
-                    
                     for attempt in range(max_retries):
                         try:
-                            if attempt > 0:
-                                st.write(f"⏳ 混雑中... ({attempt}/{max_retries})")
-                                time.sleep(5 * attempt)
-
+                            if attempt > 0: time.sleep(5 * attempt)
                             st.write(f"📡 宇宙（Gemini 2.0）に接続中... (試行: {attempt + 1}回目)")
                             
                             # =========================================================
-                            # ★ 改良版プロンプト：激辛・ガチ古典モード
+                            # ★ プロンプト（Akikoさん指定版）
                             # =========================================================
                             prompt = f"""
                             あなたは「甘さを一切排除した厳格な古典占星術師」です。
@@ -334,30 +315,17 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                             {st.session_state['result_txt']}
                             """
                             # =========================================================
-
+                            
                             model = genai.GenerativeModel(target_model)
                             response = model.generate_content(prompt)
-                            
                             if response.text:
                                 result_text = response.text
                                 status.update(label="✅ 鑑定完了！", state="complete", expanded=False)
                                 success = True
                                 break 
-
                         except Exception as e:
-                            error_msg = str(e)
-                            if "429" in error_msg or "Resource" in error_msg:
-                                continue 
-                            else:
-                                status.update(label="❌ 予期せぬエラー", state="error")
-                                st.error(f"詳細エラー: {error_msg}")
-                                break
-                    
-                    if not success and not result_text:
-                        status.update(label="❌ 混雑のため中断", state="error")
-                        st.error("星々の回線が混み合っています。")
-
+                            if "429" in str(e): continue 
+                            else: st.error(f"エラー: {e}"); break
                 if result_text:
                     st.markdown("### 🔮 鑑定結果")
                     st.markdown(result_text)
-
