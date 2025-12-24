@@ -324,6 +324,10 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
 
 ### 5. 【エンジニアからの総評】
 この厄介な製品をどう使いこなせばよいか、オーナー（本人）への最終アドバイス。
+
+### 【オーナー様へのお願い】
+この厄介な製品をどう使いこなせばよいか、くれぐれもここは外さないようにと注意書きを大きい文字で。
+
 --------------------------------------------------
 
                             【計算データ】
@@ -343,6 +347,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                 if result_text:
                     st.markdown("### 鑑定結果")
                     st.markdown(result_text)
+
 
 
 
