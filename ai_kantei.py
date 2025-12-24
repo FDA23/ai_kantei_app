@@ -341,8 +341,9 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                             if "429" in str(e): continue 
                             else: st.error(f"エラー: {e}"); break
                 if result_text:
-                    st.markdown("### 🔮 鑑定結果")
+                    st.markdown("### 鑑定結果")
                     st.markdown(result_text)
+
 
 
 
