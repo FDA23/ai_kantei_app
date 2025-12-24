@@ -267,7 +267,7 @@ if calc_btn:
 # ==========================================
 if 'result_txt' in st.session_state and st.session_state['result_txt']:
     
-    col1, col2 = st.columns([1, 1.2])
+    col1, col2 = st.columns([0.9, 1.3])
     with col1:
         st.subheader("📄 計算結果")
         st.text_area("Result", st.session_state['result_txt'], height=450)
@@ -343,6 +343,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                 if result_text:
                     st.markdown("### 🔮 鑑定結果")
                     st.markdown(result_text)
+
 
 
 
