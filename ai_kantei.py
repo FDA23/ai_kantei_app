@@ -345,8 +345,14 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                             if "429" in str(e): continue 
                             else: st.error(f"エラー: {e}"); break
                 if result_text:
-                    st.markdown("### 鑑定結果")
-                    st.markdown(result_text)
+                # 画面を「左(80%)」と「右(20%)」に分ける
+                    main_col, empty_col = st.columns([0.8, 0.2])
+
+                    # 左側のエリアだけに文字を表示する
+                    with main_col:
+                        st.markdown("### 🔮 鑑定結果")
+                        st.markdown(result_text)
+
 
 
 
