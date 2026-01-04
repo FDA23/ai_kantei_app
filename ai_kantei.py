@@ -310,8 +310,8 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
 **製造元：** 宇宙・太陽系・地球工場
 
 ### 1. 【製品概要】（太陽・月・ASCから分析）
-### 2. 【基本スペック】（水星・金星・火星から分析）
-### 3. 【既知の不具合・バグ】（土星・ハードアスペクトから分析）
+### 2. 【基本スペック】（アングルにある惑星や、ディグニティの高い天体、強いハウスから分析）
+### 3. 【既知の不具合・バグ】（土星・火星、ハウス間のハードアスペクトから分析）
 ### 4. 【メンテナンス方法】（木星・ラッキーポイント）
 ### 5. 【エンジニアからの総評】
 ### 【オーナー様へのお願い】
@@ -334,3 +334,4 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
