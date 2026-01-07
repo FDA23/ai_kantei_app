@@ -301,7 +301,8 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
 ・占星術の専門用語は、機械用語に変換すること（例：惑星→パーツ、アスペクト→回路接続、ハードアスペクト→バグ・不具合）。
 ・トーンは「淡々としたマニュアル口調」ですが、内容は辛口かつユーモアたっぷりに。
 ・ユーザーを人間扱いせず、「本製品」と呼ぶこと。
-・絶対に「～です、～ます」調で書くこと。
+・大言止めで書くこと。
+・各項目を250文字ぐらいでまとめて書くこと。
 
 【出力フォーマット】
 --------------------------------------------------
@@ -334,6 +335,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
 
 
 
