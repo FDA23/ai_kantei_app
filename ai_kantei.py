@@ -138,7 +138,15 @@ with st.sidebar:
     st.markdown("---")
     st.header("2. 対象者データ")
     name = st.text_input("お名前", "ゲスト") 
-    input_date = st.date_input("生年月日", datetime.date(1974, 4, 23))
+    
+    # ▼▼▼ 修正箇所ここから ▼▼▼
+    # 1900年から今日までの範囲で選べるように設定
+    input_date = st.date_input(
+        "生年月日",
+        value=datetime.date(1974, 4, 23),       # デフォルト値
+        min_value=datetime.date(1900, 1, 1),    # 最小値（ここまでさかのぼれる）
+        max_value=datetime.date.today()         # 最大値（今日まで）
+    )
     input_time = st.time_input("出生時間", datetime.time(9, 22), step=60)
     st.header("3. 場所設定")
     input_lat = st.text_input("緯度", "36.6953")
@@ -335,6 +343,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
 
 
 
