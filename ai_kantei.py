@@ -334,7 +334,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
 ### 4. 【メンテナンス方法】（木星・ラッキーポイント）
 ### 5. 【エンジニアからの総評】
 ### 【オーナー様へのお願い】（大文字でアドバイス）
-天王星・海王星・冥王星の影響が大きいものは明記する（アスペクト及びアングルハウス）
+#### 天王星・海王星・冥王星の影響が大きいものは明記する（アスペクト及びアングルハウス）
 --------------------------------------------------
 
 【計算データ】
@@ -354,6 +354,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
 
 
 
