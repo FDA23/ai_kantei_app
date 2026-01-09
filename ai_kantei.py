@@ -306,6 +306,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
 ユーザーのホロスコープデータを「ある精密機械（ロボット）の仕様書」として読み解き、以下のフォーマットで【取扱説明書】を作成してください。
 
 【制約事項】
+・古典占星術の観点で鑑定をする。
 ・占星術の専門用語は、機械用語に変換すること（例：惑星→パーツ、アスペクト→回路接続、ハードアスペクト→バグ・不具合）。
 ・トーンは「淡々としたマニュアル口調」ですが、内容は辛口かつユーモアたっぷりに。
 ・ユーザーを人間扱いせず、「本製品」と呼ぶこと。
@@ -343,6 +344,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
 
 
 
