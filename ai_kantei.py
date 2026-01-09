@@ -304,6 +304,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                             prompt = f"""
 あなたは冷徹かつユーモアのあるメカニック・エンジニアです。
 ユーザーのホロスコープデータを「ある精密機械（ロボット）の仕様書」として読み解き、以下のフォーマットで【取扱説明書】を作成してください。
+古典占星術の観点で鑑定し、天王星以降は使わない。
 
 【★最重要：翻訳ルール】
 占星術用語を、以下の「メカニック用語」に変換して執筆してください。
@@ -333,6 +334,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
 ### 4. 【メンテナンス方法】（木星・ラッキーポイント）
 ### 5. 【エンジニアからの総評】
 ### 【オーナー様へのお願い】（大文字でアドバイス）
+### 天王星以降の影響が大きいものは明記する（アスペクト及びアングルハウス）
 --------------------------------------------------
 
 【計算データ】
@@ -352,6 +354,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
 
 
 
