@@ -200,7 +200,7 @@ if calc_btn:
         log("-" * 60)
         
         log("【データ1: 天体位置・アングル】")
-       for p_id in all_p:
+        for p_id in all_p:
             obj = chart_whole.get(p_id)
             d, m = int(obj.signlon), int((obj.signlon - int(obj.signlon)) * 60)
             retro = " (R)" if obj.isRetrograde() else ""
@@ -378,6 +378,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
 
 
 
