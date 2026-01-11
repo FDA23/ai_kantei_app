@@ -200,7 +200,7 @@ if calc_btn:
         log("-" * 60)
         
         log("【データ1: 天体位置・アングル】")
-        for p_id in all_p:
+       for p_id in all_p:
             obj = chart_whole.get(p_id)
             d, m = int(obj.signlon), int((obj.signlon - int(obj.signlon)) * 60)
             retro = " (R)" if obj.isRetrograde() else ""
@@ -212,7 +212,14 @@ if calc_btn:
             sect_status = get_planet_sect_status(p_id, is_day)
             sect_info = f" / {sect_status}" if sect_status else ""
             abs_deg = format_360(obj.sign, d, m)
-            log(f"{JP_NAMES.get(p_id, p_id):<6}: {JP_NAMES.get(obj.sign)} {d:02}度{m:02}分{retro} (第{house_num}ハウス){sect_info} 【360度:{abs_deg}】")
+
+            # ★リセプション判定用に「支配星(ホスト)」と「高揚の星」を取得する2行を追加
+            host_ruler = RULERS.get(obj.sign)
+            host_exalt = EXALTATIONS.get(obj.sign, "None")
+            exalt_info = f", 高揚支援:{JP_NAMES.get(host_exalt)}" if host_exalt != "None" else ""
+
+            # ★ログ出力を拡張：最後に「ホスト情報」を付け加える
+            log(f"{JP_NAMES.get(p_id, p_id):<6}: {JP_NAMES.get(obj.sign)} {d:02}度{m:02}分{retro} (第{house_num}ハウス){sect_info} 【360度:{abs_deg}】 / ホスト:{JP_NAMES.get(host_ruler)}{exalt_info}")
         
         log(f"{'ASC':<6}: {JP_NAMES.get(asc_obj.sign)} {int(asc_obj.signlon):02}度 (第1ハウス) 【360度:{format_360(asc_obj.sign, int(asc_obj.signlon), 0)}】")
         
@@ -245,8 +252,8 @@ if calc_btn:
             rank = "S" if ruler_score >= 7 else "A" if ruler_score >= 4 else "B" if ruler_score >= 0 else "C" if ruler_score >= -4 else "D"
             log(f"House{i:<2}: {HOUSE_THEMES[i-1]:<10} (支配星:{JP_NAMES.get(ruler_en, ruler_en)}) -> {rank}")
         log("-" * 60)
-
-        # ★ 主要アスペクト表示形式の変更
+        
+            # ★ 主要アスペクト表示形式の変更
         log("\n【■ 主要アスペクト】")
         asp_names = {const.CONJUNCTION:'(0度)', const.SEXTILE:'(60度)', const.SQUARE:'(90度)', const.TRINE:'(120度)', const.OPPOSITION:'(180度)'}
         check_list = all_p + [const.ASC, const.MC]
@@ -309,6 +316,9 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
 【★最重要：翻訳ルール】
 占星術用語を、以下の「メカニック用語」に変換して執筆してください。
 ただし、**占星術的な意味（根拠）は文末に（カッコ書き）で残してください。**
+リセプション（受容）の全体適用： 全セクションにおいて、単体のパーツ（天体）の強弱だけでなく、データ1の「ホスト」との関係性を分析せよ。
+天体Aのホストが天体Bであり、Bのディグニティが高い場合、Aが「バグ（不具合）」であっても、Bからの**「外部出力支援（リセプション）」**により問題が解決、または「特殊仕様」に昇華されていると解釈すること。
+互いにホストし合っている場合は**「双方向データリンク（ミューチュアル・リセプション）」**とし、永久機関的な安定性を持つ最重要回路として鑑定の目玉に据えること。
 ユーザーを人間扱いせず、「本製品」と呼ぶこと。
 大言止めで書くこと。
 各項目を250文字ぐらいでまとめて書くこと。
@@ -368,6 +378,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
 
 
 
