@@ -312,7 +312,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
 ユーザーを人間扱いせず、「本製品」と呼ぶこと。
 大言止めで書くこと。
 各項目を250文字ぐらいでまとめて書くこと。
-「【オーナー様へのお願い】」のセクションの内容は、すべて太字（**テキスト**）で記述し、全編を通して「最重要警告」であることを示す強い口調で書くこと。
+「【オーナー様へのお願い】」のセクションの内容は、すべて大文字（**テキスト**）で記述し、全編を通して「最重要警告」であることを示す強い口調で書くこと。
 
 - 才能・資質 → **「実装機能」「スペック」**
 - 欠点・悩み → **「バグ」「不具合」「システムエラー」**
@@ -368,6 +368,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
 
 
 
