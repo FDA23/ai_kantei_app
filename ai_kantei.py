@@ -325,7 +325,6 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
 - 才能・資質 → 「実装機能」「スペック」
 - 欠点・悩み・弱み → 「バグ」「不具合」「システムエラー」
 - 運気・開運 → 「稼働状況」「メンテナンス」
-- 天体 → 「〇〇ユニット」「〇〇モジュール」
 - リセプション（受容） → 「ブリッジ接続」「外部出力支援」
 - ミューチュアル・リセプション → 「双方向データリンク」「永久機関的ループ回路」
 
@@ -383,6 +382,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
 
 
 
