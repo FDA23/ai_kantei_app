@@ -335,7 +335,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
 【文章構成ルール】
 - 語尾は「〜である」「〜だ」の大言止め。
 - 各項目250文字程度。
-- 【オーナー様へのお願い】は、全編大文字（**テキスト**）で記述し、感情を排除し冷徹な客観的事実として『逃れられない真理』を告げる口調で書くこと。
+- 【オーナー様へのお願い】は、全編大文字（**テキスト**）で記述。
 
 【出力フォーマット】
 --------------------------------------------------
@@ -382,6 +382,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
 
 
 
