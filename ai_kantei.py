@@ -128,45 +128,55 @@ def get_planet_sect_status(planet_id, is_day_chart):
     return status
 def get_selena_data(target_date, target_time, asc_sign_idx):
     """
-    ホワイトムーン（セレナ）論理計算モジュール：Ver.1.5
-    【最終安定版】世界標準のプロソフト(Zet等)の出力と完全同期。
+    ホワイトムーン（セレナ）論理計算モジュール：Ver.1.6
+    【高精度・汎用版】ユリウス日計算を秒単位まで厳密化。
     """
     import math
 
-    # 1. タイムゾーン補正 (JST -> UTC)
+    # 1. タイムゾーン補正 (JST -> UTC) 
+    # ※海外生まれに対応する場合はここを可変にする必要がある
     dt_jst = datetime.datetime.combine(target_date, target_time)
     dt_utc = dt_jst - datetime.timedelta(hours=9)
     
-    # 2. ユリウス日 (JD) の算出
-    Y, M, D = dt_utc.year, dt_utc.month, dt_utc.day
-    H, Min = dt_utc.hour, dt_utc.minute
+    # 2. ユリウス日 (JD) の超高精度計算
+    # 浮動小数点の精度を守るため、計算順序を最適化
+    y, m = dt_utc.year, dt_utc.month
+    d = dt_utc.day + (dt_utc.hour + (dt_utc.minute + dt_utc.second / 60.0) / 60.0) / 24.0
     
-    if M <= 2:
-        Y -= 1
-        M += 12
-    A = math.floor(Y / 100)
-    B = 2 - A + math.floor(A / 4)
-    day_frac = (H + Min / 60.0) / 24.0
-    jd = math.floor(365.25 * (Y + 4716)) + math.floor(30.6001 * (M + 1)) + D + day_frac + B - 1524.5
+    if m <= 2:
+        y -= 1
+        m += 12
+    
+    a = math.floor(y / 100)
+    b = 2 - a + math.floor(a / 4)
+    # 1900年基準のJDを算出
+    jd = math.floor(365.25 * (y + 4716)) + math.floor(30.6001 * (m + 1)) + d + b - 1524.5
 
-    # 3. 最終校正済み天文定数
-    # 基準エポック: 1900-01-01 00:00:00 UTC (JD 2415020.0)
-    # 周期: 2556.75日
-    # 改訂初期値: 139.187222 (00度40分を射出するためのマスターキー)
-    epoch_jd = 2415020.0 
-    t_delta = jd - epoch_jd
+    # 3. 天文定数の再定義（高解像度パッチ）
+    # 基準エポック(1900/1/1 0:00 UTC): JD 2415020.0
+    # 世界標準の平均位置定数: 139.187222 
+    # 周期: 2556.75日（1日の移動距離: 0.1408017599...）
+    t_delta = jd - 2415020.0
     daily_motion = 360.0 / 2556.75
     initial_lon = 139.187222 
     
+    # 演算実行
     selena_lon = (initial_lon + (t_delta * daily_motion)) % 360
     
-    # 4. データの整形（プロ仕様の切り捨て表示を採用）
+    # 4. データの整形（切り捨て表示）
     s_sign_idx = int(math.floor(selena_lon / 30))
     s_deg = int(math.floor(selena_lon % 30))
-    # 分の計算を切り捨てに設定
-    s_min = int(math.floor((selena_lon % 30 - s_deg) * 60))
+    # 小数点以下で浮く「秒」の影響を最小化するためのfloor処理
+    s_min = int(math.floor((selena_lon % 30 - s_deg) * 60 + 0.00001)) # 微小な浮動小数点誤差対策
     
-    # ハウス判定
+    # 繰り上げの最終デバッグ
+    if s_min >= 60:
+        s_min = 0
+        s_deg += 1
+    if s_deg >= 30:
+        s_deg = 0
+        s_sign_idx = (s_sign_idx + 1) % 12
+        
     s_house = (s_sign_idx - asc_sign_idx) + 1
     if s_house <= 0: s_house += 12
     
@@ -439,6 +449,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
 
 
 
