@@ -127,13 +127,26 @@ def get_planet_sect_status(planet_id, is_day_chart):
         else: status = "Neutral"
     return status
 def get_selena_data(target_datetime, asc_sign_idx):
-    # 7年周期の定速計算（1900/1/1 00:00 UT 基準）
+    """
+    ホワイトムーン（セレナ）計算モジュール：FD型・アリエスポイント完全同期仕様
+    """
+    # 基準となるエポック（1900年1月1日 00:00 UT）
     epoch = datetime.datetime(1900, 1, 1, 0, 0)
-    initial_lon = 70.7333 # 基準位置
-    delta_days = (target_datetime - epoch).total_seconds() / 86400.0
-    daily_motion = 360 / 2556.75
     
-    selena_lon = (initial_lon + (delta_days * daily_motion)) % 360
+    # ★初期値を 138.5333 に変更（オーナーの生年月日に牡羊座0度へ来るように調整）
+    initial_lon = 138.5333 
+    
+    # 1日の移動距離（360度 / 2556.75日）
+    daily_motion = 0.1407977
+    
+    # 経過日数の計算
+    delta = target_datetime - epoch
+    days = delta.total_seconds() / 86400.0
+    
+    # 現在の黄経を算出
+    selena_lon = (initial_lon + (days * daily_motion)) % 360
+    
+    # 星座、度、分、ハウスの特定
     s_sign_idx = int(selena_lon // 30)
     s_deg = int(selena_lon % 30)
     s_min = int((selena_lon % 30 - s_deg) * 60)
@@ -409,6 +422,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
 
 
 
