@@ -128,38 +128,51 @@ def get_planet_sect_status(planet_id, is_day_chart):
     return status
 def get_selena_data(target_date, target_time, asc_sign_idx):
     """
-    ホワイトムーン（セレナ）論理計算モジュール：Ver.1.1
-    世界標準の天文定数(Epoch 1900)を採用。
+    ホワイトムーン（セレナ）論理計算モジュール：Ver.1.2
+    高精度アリエスポイント同期仕様（定数: 138.63805）
     """
-    # 1. JSTからUTCへの時間軸補正
+    # 1. JSTからUTCへの時間軸補正（高精度処理）
     dt_jst = datetime.datetime.combine(target_date, target_time)
     dt_utc = dt_jst - datetime.timedelta(hours=9)
     
-    # 2. ユリウス日 (JD) の高精度計算
+    # 2. ユリウス日 (JD) の高精度計算（端数処理の最適化）
     year = dt_utc.year
     month = dt_utc.month
-    day = dt_utc.day + (dt_utc.hour + dt_utc.minute / 60.0) / 24.0
+    # 日付に時間と分を正確に加算
+    day = dt_utc.day + (dt_utc.hour / 24.0) + (dt_utc.minute / 1440.0) + (dt_utc.second / 86400.0)
     
     if month <= 2:
         year -= 1
         month += 12
     A = int(year / 100)
     B = 2 - A + int(A / 4)
+    # JD計算のコアロジック
     jd = int(365.25 * (year + 4716)) + int(30.6001 * (month + 1)) + day + B - 1524.5
 
-    # 3. 天文学的定数による演算
-    # 基準JD: 2415020.5, 基準位置: 138.6388, 周期: 2556.75
+    # 3. アヴェスタ流儀のホワイトムーン公式
+    # 基準エポック(JD 2415020.5)における高精度初期値：138.63805
     t_delta = jd - 2415020.5
-    daily_motion = 360.0 / 2556.75
-    initial_lon = 138.6388
+    daily_motion = 360.0 / 2556.75  # 1日の移動距離: 約0.140801759...
+    initial_lon = 138.63805
     
+    # 全天360度における絶対黄経を算出
     selena_lon = (initial_lon + (t_delta * daily_motion)) % 360
     
-    # 4. データ出力
+    # 4. データのパース（星座インデックス、度、分）
     s_sign_idx = int(selena_lon // 30)
     s_deg = int(selena_lon % 30)
-    s_min = int((selena_lon % 30 - s_deg) * 60)
+    # 0.5分以上のズレを防ぐため、四捨五入（round）を導入
+    s_min = int(round((selena_lon % 30 - s_deg) * 60))
     
+    # 度数が60分になった場合の繰り上げ処理（重要）
+    if s_min == 60:
+        s_min = 0
+        s_deg += 1
+        if s_deg == 30:
+            s_deg = 0
+            s_sign_idx = (s_sign_idx + 1) % 12
+
+    # ホールサインでのハウス計算
     s_house = (s_sign_idx - asc_sign_idx) + 1
     if s_house <= 0: s_house += 12
     
@@ -432,6 +445,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
 
 
 
