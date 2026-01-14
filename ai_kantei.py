@@ -128,14 +128,14 @@ def get_planet_sect_status(planet_id, is_day_chart):
     return status
 def get_selena_data(target_date, target_time, asc_sign_idx):
     """
-    ホワイトムーン（セレナ）天文ロジック計算モジュール。
-    ねじ込みを排除し、ユリウス日（JD）に基づいた天文学的アプローチを採用。
+    ホワイトムーン（セレナ）論理計算モジュール：Ver.1.1
+    世界標準の天文定数(Epoch 1900)を採用。
     """
-    # 1. JST (+9:00) を UTC (0:00) に変換 (これが0.16度のズレを解消する鍵)
+    # 1. JSTからUTCへの時間軸補正
     dt_jst = datetime.datetime.combine(target_date, target_time)
     dt_utc = dt_jst - datetime.timedelta(hours=9)
     
-    # 2. ユリウス日 (JD) の計算
+    # 2. ユリウス日 (JD) の高精度計算
     year = dt_utc.year
     month = dt_utc.month
     day = dt_utc.day + (dt_utc.hour + dt_utc.minute / 60.0) / 24.0
@@ -147,23 +147,19 @@ def get_selena_data(target_date, target_time, asc_sign_idx):
     B = 2 - A + int(A / 4)
     jd = int(365.25 * (year + 4716)) + int(30.6001 * (month + 1)) + day + B - 1524.5
 
-    # 3. 平均的セレナの標準公式 (Avestan / Standard Mean Selena)
-    # 基準エポック: JD 2415020.5 (1900/1/1 12:00 UT)
-    # 基準経度: 70.7333333 (双子座 10度44分)
-    # 周期: 2556.75日 (正確に7年) -> 日運: 0.1408018...
-    
+    # 3. 天文学的定数による演算
+    # 基準JD: 2415020.5, 基準位置: 138.6388, 周期: 2556.75
     t_delta = jd - 2415020.5
     daily_motion = 360.0 / 2556.75
-    initial_lon = 70.7333333
+    initial_lon = 138.6388
     
     selena_lon = (initial_lon + (t_delta * daily_motion)) % 360
     
-    # 4. データの整形
+    # 4. データ出力
     s_sign_idx = int(selena_lon // 30)
     s_deg = int(selena_lon % 30)
     s_min = int((selena_lon % 30 - s_deg) * 60)
     
-    # ホールサインでのハウス計算
     s_house = (s_sign_idx - asc_sign_idx) + 1
     if s_house <= 0: s_house += 12
     
@@ -436,6 +432,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
 
 
 
