@@ -126,7 +126,23 @@ def get_planet_sect_status(planet_id, is_day_chart):
         elif planet_id in diurnal_team: status = "Out of Sect(凶)"
         else: status = "Neutral"
     return status
-
+def get_selena_data(target_datetime, asc_sign_idx):
+    # 7年周期の定速計算（1900/1/1 00:00 UT 基準）
+    epoch = datetime.datetime(1900, 1, 1, 0, 0)
+    initial_lon = 70.7333 # 基準位置
+    delta_days = (target_datetime - epoch).total_seconds() / 86400.0
+    daily_motion = 360 / 2556.75
+    
+    selena_lon = (initial_lon + (delta_days * daily_motion)) % 360
+    s_sign_idx = int(selena_lon // 30)
+    s_deg = int(selena_lon % 30)
+    s_min = int((selena_lon % 30 - s_deg) * 60)
+    
+    # ホールサインでのハウス計算
+    s_house = (s_sign_idx - asc_sign_idx) + 1
+    if s_house <= 0: s_house += 12
+    
+    return SIGN_LIST[s_sign_idx], s_deg, s_min, s_house, selena_lon
 # ==========================================
 # 4. メイン画面
 # ==========================================
@@ -231,6 +247,9 @@ if calc_btn:
         log(f"{'POF':<6}: {JP_NAMES.get(pof_sign)} {int(pof_deg):02}度 (第{pof_house_num}ハウス)")
         log("-" * 60)
 
+        # ホワイトムーンデータの生成
+        s_sign, s_deg, s_min, s_house, s_lon_abs = get_selena_data(input_datetime, asc_sign_idx)
+        log(f"{'ホワイトムーン':<6}: {JP_NAMES[s_sign]} {s_deg:02}度{s_min:02}分 (第{s_house}ハウス) / 宇宙の絶対守護パッチ 【360度:{s_lon_abs:.2f}度】")
         log("\n【データ2: ディグニティ(惑星の強さ)】")
         scores, planet_score_map = [], {}
         for p_id in trad_p:
@@ -392,6 +411,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
 
 
 
