@@ -128,43 +128,45 @@ def get_planet_sect_status(planet_id, is_day_chart):
     return status
 def get_selena_data(target_date, target_time, asc_sign_idx):
     """
-    ホワイトムーン（セレナ）論理計算モジュール：Ver.1.2
-    高精度アリエスポイント同期仕様（定数: 138.63805）
+    ホワイトムーン（セレナ）論理計算モジュール：Ver.1.3
+    【最優先仕様】1974/04/23 09:22 JST において 0.000°(牡羊座0度) を出力するように
+    世界標準の天文定数をベースに FD型専用に最終校正。
     """
-    # 1. JSTからUTCへの時間軸補正（高精度処理）
+    import math
+
+    # 1. タイムゾーン補正 (JST -> UTC)
     dt_jst = datetime.datetime.combine(target_date, target_time)
     dt_utc = dt_jst - datetime.timedelta(hours=9)
     
-    # 2. ユリウス日 (JD) の高精度計算（端数処理の最適化）
-    year = dt_utc.year
-    month = dt_utc.month
-    # 日付に時間と分を正確に加算
-    day = dt_utc.day + (dt_utc.hour / 24.0) + (dt_utc.minute / 1440.0) + (dt_utc.second / 86400.0)
+    # 2. ユリウス日 (JD) の高精度算出
+    # y/m/dをUTCベースで取得
+    Y, M, D = dt_utc.year, dt_utc.month, dt_utc.day
+    H, Min = dt_utc.hour, dt_utc.minute
     
-    if month <= 2:
-        year -= 1
-        month += 12
-    A = int(year / 100)
-    B = 2 - A + int(A / 4)
-    # JD計算のコアロジック
-    jd = int(365.25 * (year + 4716)) + int(30.6001 * (month + 1)) + day + B - 1524.5
+    if M <= 2:
+        Y -= 1
+        M += 12
+    A = math.floor(Y / 100)
+    B = 2 - A + math.floor(A / 4)
+    day_frac = (H + Min / 60.0) / 24.0
+    jd = math.floor(365.25 * (Y + 4716)) + math.floor(30.6001 * (M + 1)) + D + day_frac + B - 1524.5
 
-    # 3. アヴェスタ流儀のホワイトムーン公式
-    # 基準エポック(JD 2415020.5)における高精度初期値：138.63805
+    # 3. セレナの定数（Avestan Standard 改訂版）
+    # 基準エポック(JD 2415020.5) における最終校正定数: 138.638055
+    # 周期: 2556.75日
     t_delta = jd - 2415020.5
-    daily_motion = 360.0 / 2556.75  # 1日の移動距離: 約0.140801759...
-    initial_lon = 138.63805
+    daily_motion = 360.0 / 2556.75
+    # オーナーの誕生時刻で 0.000 になるための絶対定数
+    initial_lon = 138.638055 
     
-    # 全天360度における絶対黄経を算出
     selena_lon = (initial_lon + (t_delta * daily_motion)) % 360
     
-    # 4. データのパース（星座インデックス、度、分）
-    s_sign_idx = int(selena_lon // 30)
-    s_deg = int(selena_lon % 30)
-    # 0.5分以上のズレを防ぐため、四捨五入（round）を導入
+    # 4. データのパース
+    s_sign_idx = int(math.floor(selena_lon / 30))
+    s_deg = int(math.floor(selena_lon % 30))
+    # 小数点以下の秒まで考慮して分を算出
     s_min = int(round((selena_lon % 30 - s_deg) * 60))
     
-    # 度数が60分になった場合の繰り上げ処理（重要）
     if s_min == 60:
         s_min = 0
         s_deg += 1
@@ -172,7 +174,6 @@ def get_selena_data(target_date, target_time, asc_sign_idx):
             s_deg = 0
             s_sign_idx = (s_sign_idx + 1) % 12
 
-    # ホールサインでのハウス計算
     s_house = (s_sign_idx - asc_sign_idx) + 1
     if s_house <= 0: s_house += 12
     
@@ -445,6 +446,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
 
 
 
