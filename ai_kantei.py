@@ -183,6 +183,9 @@ if calc_btn:
         date = Datetime(date_str, time_str, '+09:00')
         pos = GeoPos(float(input_lat), float(input_lon))
         
+        # ★ホワイトムーン計算用の標準Python時刻オブジェクトを作成
+        py_dt = datetime.datetime.combine(input_date, input_time)
+        
         all_p = [const.SUN, const.MOON, const.MERCURY, const.VENUS, const.MARS, const.JUPITER, const.SATURN, const.URANUS, const.NEPTUNE, const.PLUTO, const.NORTH_NODE]
         trad_p = [const.SUN, const.MOON, const.MERCURY, const.VENUS, const.MARS, const.JUPITER, const.SATURN]
 
@@ -229,12 +232,10 @@ if calc_btn:
             sect_info = f" / {sect_status}" if sect_status else ""
             abs_deg = format_360(obj.sign, d, m)
 
-            # ★リセプション判定用に「支配星(ホスト)」と「高揚の星」を取得する2行を追加
             host_ruler = RULERS.get(obj.sign)
             host_exalt = EXALTATIONS.get(obj.sign, "None")
             exalt_info = f", 高揚支援:{JP_NAMES.get(host_exalt)}" if host_exalt != "None" else ""
 
-            # ★ログ出力を拡張：最後に「ホスト情報」を付け加える
             log(f"{JP_NAMES.get(p_id, p_id):<6}: {JP_NAMES.get(obj.sign)} {d:02}度{m:02}分{retro} (第{house_num}ハウス){sect_info} 【360度:{abs_deg}】 / ホスト:{JP_NAMES.get(host_ruler)}{exalt_info}")
         
         log(f"{'ASC':<6}: {JP_NAMES.get(asc_obj.sign)} {int(asc_obj.signlon):02}度 (第1ハウス) 【360度:{format_360(asc_obj.sign, int(asc_obj.signlon), 0)}】")
@@ -245,11 +246,13 @@ if calc_btn:
         log(f"{'MC':<6}: {JP_NAMES.get(mc_obj.sign)} {int(mc_obj.signlon):02}度 (第{mc_house_num}ハウス) 【360度:{format_360(mc_obj.sign, int(mc_obj.signlon), 0)}】")
         
         log(f"{'POF':<6}: {JP_NAMES.get(pof_sign)} {int(pof_deg):02}度 (第{pof_house_num}ハウス)")
+
+        # ★ホワイトムーンデータの生成（py_dt を使用するように修正）
+        s_sign, s_deg, s_min, s_house, s_lon_abs = get_selena_data(py_dt, asc_sign_idx)
+        log(f"{'ホワイトムーン':<6}: {JP_NAMES[s_sign]} {s_deg:02}度{s_min:02}分 (第{s_house}ハウス) / 宇宙の絶対守護パッチ 【360度:{s_lon_abs:.2f}度】")
+        
         log("-" * 60)
 
-        # ホワイトムーンデータの生成
-        s_sign, s_deg, s_min, s_house, s_lon_abs = get_selena_data(input_datetime, asc_sign_idx)
-        log(f"{'ホワイトムーン':<6}: {JP_NAMES[s_sign]} {s_deg:02}度{s_min:02}分 (第{s_house}ハウス) / 宇宙の絶対守護パッチ 【360度:{s_lon_abs:.2f}度】")
         log("\n【データ2: ディグニティ(惑星の強さ)】")
         scores, planet_score_map = [], {}
         for p_id in trad_p:
@@ -272,7 +275,6 @@ if calc_btn:
             log(f"House{i:<2}: {HOUSE_THEMES[i-1]:<10} (支配星:{JP_NAMES.get(ruler_en, ruler_en)}) -> {rank}")
         log("-" * 60)
         
-            # ★ 主要アスペクト表示形式の変更
         log("\n【■ 主要アスペクト】")
         asp_names = {const.CONJUNCTION:'(0度)', const.SEXTILE:'(60度)', const.SQUARE:'(90度)', const.TRINE:'(120度)', const.OPPOSITION:'(180度)'}
         check_list = all_p + [const.ASC, const.MC]
@@ -282,23 +284,19 @@ if calc_btn:
                 obj2 = chart_whole.get(id2)
                 asp = aspects.getAspect(obj1, obj2, const.MAJOR_ASPECTS)
                 if asp.exists() and asp.orb <= 5:
-                    # 天体1のハウス計算
                     idx1 = SIGN_LIST.index(obj1.sign)
                     h1 = (idx1 - asc_sign_idx) + 1
                     if h1 <= 0: h1 += 12
-                    # 天体2のハウス計算
                     idx2 = SIGN_LIST.index(obj2.sign)
                     h2 = (idx2 - asc_sign_idx) + 1
                     if h2 <= 0: h2 += 12
-                    
-                    # 形式: 天体（〇ハウス）ｘ天体（〇ハウス）（60度）（誤差3.0）
                     name1 = f"{JP_NAMES.get(id1, id1)}（{h1}ハウス）"
                     name2 = f"{JP_NAMES.get(id2, id2)}（{h2}ハウス）"
                     asp_str = asp_names.get(asp.type, f"({asp.type})")
                     log(f"{name1} ｘ {name2} {asp_str}（誤差{asp.orb:.1f}）")
 
         st.session_state['result_txt'] = "\n".join(lines)
-        st.success("計算完了 (ホールサイン・POF・セクト判定・360度表記済)")
+        st.success("計算完了 (ホワイトムーン実装・データ完全同期済)")
     except Exception as e: st.error(f"エラー: {e}")
 
 # ==========================================
@@ -411,6 +409,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
 
 
 
