@@ -128,9 +128,8 @@ def get_planet_sect_status(planet_id, is_day_chart):
     return status
 def get_selena_data(target_date, target_time, asc_sign_idx):
     """
-    ホワイトムーン（セレナ）論理計算モジュール：Ver.1.3
-    【最優先仕様】1974/04/23 09:22 JST において 0.000°(牡羊座0度) を出力するように
-    世界標準の天文定数をベースに FD型専用に最終校正。
+    ホワイトムーン（セレナ）論理計算モジュール：Ver.1.4
+    アヴェスタ流儀・世界標準定数（139.237222）による高精度演算。
     """
     import math
 
@@ -139,7 +138,6 @@ def get_selena_data(target_date, target_time, asc_sign_idx):
     dt_utc = dt_jst - datetime.timedelta(hours=9)
     
     # 2. ユリウス日 (JD) の高精度算出
-    # y/m/dをUTCベースで取得
     Y, M, D = dt_utc.year, dt_utc.month, dt_utc.day
     H, Min = dt_utc.hour, dt_utc.minute
     
@@ -151,13 +149,35 @@ def get_selena_data(target_date, target_time, asc_sign_idx):
     day_frac = (H + Min / 60.0) / 24.0
     jd = math.floor(365.25 * (Y + 4716)) + math.floor(30.6001 * (M + 1)) + D + day_frac + B - 1524.5
 
-    # 3. セレナの定数（Avestan Standard 改訂版）
-    # 基準エポック(JD 2415020.5) における最終校正定数: 138.638055
+    # 3. セレナの標準定数（Avestan Standard）
+    # 基準エポック: 1900-01-01 00:00:00 UTC (JD 2415020.0)
+    # 基準経度: 139.237222 (Leo 19°14'14")
     # 周期: 2556.75日
-    t_delta = jd - 2415020.5
+    epoch_jd = 2415020.0 
+    t_delta = jd - epoch_jd
     daily_motion = 360.0 / 2556.75
-    # オーナーの誕生時刻で 0.000 になるための絶対定数
-    initial_lon = 138.638055 
+    initial_lon = 139.237222 
+    
+    selena_lon = (initial_lon + (t_delta * daily_motion)) % 360
+    
+    # 4. データの整形
+    s_sign_idx = int(math.floor(selena_lon / 30))
+    s_deg = int(math.floor(selena_lon % 30))
+    s_min = int(round((selena_lon % 30 - s_deg) * 60))
+    
+    # 分の繰り上げ処理
+    if s_min == 60:
+        s_min = 0
+        s_deg += 1
+        if s_deg == 30:
+            s_deg = 0
+            s_sign_idx = (s_sign_idx + 1) % 12
+
+    # ハウス判定（ASC位置に依存）
+    s_house = (s_sign_idx - asc_sign_idx) + 1
+    if s_house <= 0: s_house += 12
+    
+    return SIGN_LIST[s_sign_idx], s_deg, s_min, s_house, selena_lon
     
     selena_lon = (initial_lon + (t_delta * daily_motion)) % 360
     
@@ -446,6 +466,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
 
 
 
