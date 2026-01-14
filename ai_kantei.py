@@ -126,27 +126,39 @@ def get_planet_sect_status(planet_id, is_day_chart):
         elif planet_id in diurnal_team: status = "Out of Sect(凶)"
         else: status = "Neutral"
     return status
-def get_selena_data(target_datetime, asc_sign_idx):
+def get_selena_data(target_date, target_time, asc_sign_idx):
     """
-    ホワイトムーン（セレナ）計算モジュール：FD型・アリエスポイント完全同期仕様
+    ホワイトムーン（セレナ）天文ロジック計算モジュール。
+    ねじ込みを排除し、ユリウス日（JD）に基づいた天文学的アプローチを採用。
     """
-    # 基準となるエポック（1900年1月1日 00:00 UT）
-    epoch = datetime.datetime(1900, 1, 1, 0, 0)
+    # 1. JST (+9:00) を UTC (0:00) に変換 (これが0.16度のズレを解消する鍵)
+    dt_jst = datetime.datetime.combine(target_date, target_time)
+    dt_utc = dt_jst - datetime.timedelta(hours=9)
     
-    # ★初期値を 138.5333 に変更（オーナーの生年月日に牡羊座0度へ来るように調整）
-    initial_lon = 138.5333 
+    # 2. ユリウス日 (JD) の計算
+    year = dt_utc.year
+    month = dt_utc.month
+    day = dt_utc.day + (dt_utc.hour + dt_utc.minute / 60.0) / 24.0
     
-    # 1日の移動距離（360度 / 2556.75日）
-    daily_motion = 0.1407977
+    if month <= 2:
+        year -= 1
+        month += 12
+    A = int(year / 100)
+    B = 2 - A + int(A / 4)
+    jd = int(365.25 * (year + 4716)) + int(30.6001 * (month + 1)) + day + B - 1524.5
+
+    # 3. 平均的セレナの標準公式 (Avestan / Standard Mean Selena)
+    # 基準エポック: JD 2415020.5 (1900/1/1 12:00 UT)
+    # 基準経度: 70.7333333 (双子座 10度44分)
+    # 周期: 2556.75日 (正確に7年) -> 日運: 0.1408018...
     
-    # 経過日数の計算
-    delta = target_datetime - epoch
-    days = delta.total_seconds() / 86400.0
+    t_delta = jd - 2415020.5
+    daily_motion = 360.0 / 2556.75
+    initial_lon = 70.7333333
     
-    # 現在の黄経を算出
-    selena_lon = (initial_lon + (days * daily_motion)) % 360
+    selena_lon = (initial_lon + (t_delta * daily_motion)) % 360
     
-    # 星座、度、分、ハウスの特定
+    # 4. データの整形
     s_sign_idx = int(selena_lon // 30)
     s_deg = int(selena_lon % 30)
     s_min = int((selena_lon % 30 - s_deg) * 60)
@@ -156,6 +168,7 @@ def get_selena_data(target_datetime, asc_sign_idx):
     if s_house <= 0: s_house += 12
     
     return SIGN_LIST[s_sign_idx], s_deg, s_min, s_house, selena_lon
+    
 # ==========================================
 # 4. メイン画面
 # ==========================================
@@ -261,7 +274,8 @@ if calc_btn:
         log(f"{'POF':<6}: {JP_NAMES.get(pof_sign)} {int(pof_deg):02}度 (第{pof_house_num}ハウス)")
 
         # ★ホワイトムーンデータの生成（py_dt を使用するように修正）
-        s_sign, s_deg, s_min, s_house, s_lon_abs = get_selena_data(py_dt, asc_sign_idx)
+       # ホワイトムーンデータの生成（日、時、ASCインデックスを渡す）
+        s_sign, s_deg, s_min, s_house, s_lon_abs = get_selena_data(input_date, input_time, asc_sign_idx)
         log(f"{'ホワイトムーン':<6}: {JP_NAMES[s_sign]} {s_deg:02}度{s_min:02}分 (第{s_house}ハウス) / 宇宙の絶対守護パッチ 【360度:{s_lon_abs:.2f}度】")
         
         log("-" * 60)
@@ -422,6 +436,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
 
 
 
