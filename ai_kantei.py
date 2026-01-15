@@ -150,7 +150,7 @@ def get_selena_data(target_date, target_time, asc_sign_idx):
     # 3. ホワイトムーン（セレナ）の定数
     # 周期: 7年（2556.75日）
     # 基準位置: 1900/1/1 12:00 UTC (JD 2415020.5) において 138.6380556度
-    initial_lon = 139.25498
+    initial_lon = 139.25499
     daily_motion = 360.0 / 2556.75
     
     # 経過日数から現在の黄経（0-360度）を算出
@@ -443,6 +443,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
 
 
 
