@@ -128,37 +128,52 @@ def get_planet_sect_status(planet_id, is_day_chart):
     return status
 def get_selena_data(target_date, target_time, asc_sign_idx):
     import math
-    # 1. UTC変換
+    
+    # 1. UTC（世界標準時）への変換
+    # 日本時間(JST)から9時間を引いて計算基準を合わせます
     dt_jst = datetime.datetime.combine(target_date, target_time)
     dt_utc = dt_jst - datetime.timedelta(hours=9)
-    # 2. JD計算 (高精度版)
-    Y, M, D = dt_utc.year, dt_utc.month, dt_utc.day
-    H, Min, S = dt_utc.hour, dt_utc.minute, dt_utc.second
-    if M <= 2:
-        Y -= 1
-        M += 12
-    A = math.floor(Y / 100)
-    B = 2 - A + math.floor(A / 4)
-    day_frac = (H + Min / 60.0 + S / 3600.0) / 24.0
-    jd = math.floor(365.25 * (Y + 4716)) + math.floor(30.6001 * (M + 1)) + D + day_frac + B - 1524.5
+    
+    # 2. ユリウス日 (JD) の計算
+    # 高精度な天体計算のために日付を数値化します
+    y, m, d = dt_utc.year, dt_utc.month, dt_utc.day
+    h, mn, s = dt_utc.hour, dt_utc.minute, dt_utc.second
+    
+    if m <= 2:
+        y -= 1
+        m += 12
+    a = y // 100
+    b = 2 - a + (a // 4)
+    day_frac = (h + mn / 60.0 + s / 3600.0) / 24.0
+    jd = math.floor(365.25 * (y + 4716)) + math.floor(30.6001 * (m + 1)) + d + day_frac + b - 1524.5
 
-    # 3. 世界標準定数 (忖度なし・アヴェスタ規格)
-    initial_lon = 138.6380556 # これが全人類の基準点
+    # 3. ホワイトムーン（セレナ）の定数
+    # 周期: 7年（2556.75日）
+    # 基準位置: 1900/1/1 12:00 UTC (JD 2415020.5) において 138.6380556度
+    initial_lon = 138.6380556
     daily_motion = 360.0 / 2556.75
     
-    selena_lon = (initial_lon + ((jd - 2415020.5) * daily_motion)) % 360
+    # 経過日数から現在の黄経（0-360度）を算出
+    selena_lon = (initial_lon + (jd - 2415020.5) * daily_motion) % 360
     
-    # 4. 整形 (floor: 切り捨て)
-    s_sign_idx = int(math.floor(selena_lon / 30))
-    s_deg = int(math.floor(selena_lon % 30))
-    s_min = int(math.floor((selena_lon % 30 - s_deg) * 60 + 0.00001))
+    # 4. サイン・度・分の抽出
+    s_sign_idx = int(selena_lon // 30)   # 0=牡羊座, 1=牡牛座...
+    s_deg_total = selena_lon % 30
+    s_deg = int(s_deg_total)
+    s_min = int((s_deg_total - s_deg) * 60 + 0.5) # 四捨五入
     
-    # 繰り上げ
-    if s_min >= 60: s_min = 0; s_deg += 1
-    if s_deg >= 30: s_deg = 0; s_sign_idx = (s_sign_idx + 1) % 12
+    # 繰り上げ処理
+    if s_min >= 60:
+        s_min = 0
+        s_deg += 1
+    if s_deg >= 30:
+        s_deg = 0
+        s_sign_idx = (s_sign_idx + 1) % 12
     
-    s_house = (s_sign_idx - asc_sign_idx) + 1
-    if s_house <= 0: s_house += 12
+    # 5. ハウス計算 (ホールサインハウス)
+    # ASCのサインを1ハウスとして、セレナが何番目のハウスかを計算
+    s_house = (s_sign_idx - asc_sign_idx) % 12 + 1
+    
     return SIGN_LIST[s_sign_idx], s_deg, s_min, s_house, selena_lon
     
 # ==========================================
@@ -428,6 +443,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
 
 
 
