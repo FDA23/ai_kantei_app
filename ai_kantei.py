@@ -350,7 +350,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
             if st.button("✨ 星に聞く✨", type="primary"):
                 result_text = ""
                 success = False
-                target_model = "gemini-2.5-flash" 
+                target_model = "gemini-3-flash-preview" 
                 
                 with st.status("💫 星々が運命を巡っています...", expanded=True) as status:
                     max_retries = 3
@@ -445,6 +445,7 @@ if 'result_txt' in st.session_state and st.session_state['result_txt']:
                     with main_col:
                         st.markdown("### 🔮 鑑定結果")
                         st.markdown(result_text)
+
 
 
 
